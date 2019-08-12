@@ -1,0 +1,48 @@
+Настройка PostgreSQL
+* psql
+* подключение к определенной БД: psql -d <db_name>
+* выход: \q
+  созданные таблицы: \d
+* создание роли/юзера бд: createuser.
+  нужно создать юзера в linux с таким же именем
+* изменить пароль юзеру БД: ALTER USER user_name WITH PASSWORD 'new_password';
+* содание БД: createdb <name>
+* открыть сервер БД для подключений извне:
+  посмотреть, где лежит конфиг: ps aux | grep postgres
+  в /etc/postgresql/9.5/main/postgresql.conf делаем: listen_addresses = '*'
+  в /etc/postgresql/9.5/main/pg_hba.conf добавляем: host     all     all     all     password
+* подключение к удаленной БД: psql -h 192.168.0.15 -U usersql
+
+* CREATE TABLE playground (
+    equip_id serial PRIMARY KEY,
+    type varchar (50) NOT NULL,
+    color varchar (25) NOT NULL,
+    location varchar(25) check (location in ('north', 'south', 'west', 'east')),
+    install_date date
+    );
+* INSERT INTO playground (type, color, location, install_date) VALUES ('slide', 'blue', 'south', '2014-04-28');
+* DELETE FROM playground WHERE type = 'slide';
+* добавить столбец в базу: ALTER TABLE playground ADD <column_name> <type>;
+* удалить столбец: ALTER TABLE playground DROP last_maint;
+* UPDATE playground SET color = 'red' WHERE type = 'swing';
+
+
+PostgrsSQL в Python
+    import psycopg2
+    conn = psycopg2.connect(dbname='database', user='db_user', password='mypassword', host='localhost')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM airport LIMIT 10')
+    ...
+    cursor.close()
+    conn.close()
+
+cursor.fetchone() — возвращает 1 строку
+cursor.fetchall() — возвращает список всех строк
+cursor.fetchmany(size=5) — возвращает заданное количество строк
+
+По умолчанию результат приходит в виде кортежа. Кортеж неудобен тем, что доступ происходит по индексу. Если хотите работать со словарём, то при вызове .cursor передайте аргумент cursor_factory:
+conn.cursor(cursor_factory=DictCursor)
+
+Динамические запросы:
+cursor.execute('SELECT * FROM airport WHERE city_code = %s', ('ALA', ))
+// всегда %s
